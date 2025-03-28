@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dots & Boxes</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/styles.css">
+    <style>
+        /* Override fireworks animation to rise from bottom */
+        .firework {
+            position: absolute;
+            bottom: 0 !important;
+            top: auto !important;
+            transition: bottom 1.2s ease-out, left 1.2s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dots & Boxes</h1>
+        
+        <div class="game-info">
+            <div class="player player1">
+                <span class="player-label">Player 1</span>
+                <span class="player-score" id="player1-score">0</span>
+            </div>
+            <div class="player player2">
+                <span class="player-label">Player 2</span>
+                <span class="player-score" id="player2-score">0</span>
+            </div>
+            <div class="turn-indicator">
+                <span id="turn-text">Player 1's turn</span>
+            </div>
+        </div>
+        
+        <div class="game-board" id="game-board"></div>
+        
+        <div class="controls">
+            <button id="new-game-btn">New Game</button>
+            <div class="auto-fill">
+                <label for="auto-fill-toggle" title="Automatically completes boxes that only need one more line">Auto-fill:</label>
+                <input type="checkbox" id="auto-fill-toggle" title="Automatically completes boxes that only need one more line">
+            </div>
+            <div class="fill-grid">
+                <label for="fill-grid-select">Fill Grid:</label>
+                <select id="fill-grid-select">
+                    <option value="0" selected>0%</option>
+                    <option value="10">10%</option>
+                    <option value="20">20%</option>
+                    <option value="30">30%</option>
+                    <option value="40">40%</option>
+                    <option value="50">50%</option>
+                </select>
+            </div>
+            <div class="grid-size">
+                <label for="grid-size-select">Grid Size:</label>
+                <select id="grid-size-select">
+                    <option value="5">5×5</option>
+                    <option value="6">6×6</option>
+                    <option value="7">7×7</option>
+                    <option value="8">8×8</option>
+                    <option value="10">10×10</option>
+                    <option value="12">12×12</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fireworks animation container -->
+    <div class="fireworks-container" id="fireworks-container"></div>
+    
+    <!-- Win message -->
+    <div class="win-message" id="win-message"></div>
+    
+    <script type="module" src="/src/main.js"></script>
+    <script src="/rising-fireworks.js"></script>
+</body>
+</html> 
