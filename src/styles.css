@@ -4,11 +4,80 @@
     box-sizing: border-box;
 }
 
+@keyframes rainbow-background {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
+    background: linear-gradient(124deg, 
+        #ff0000, #ff8000, #ffff00, #80ff00, 
+        #00ff00, #00ff80, #00ffff, #0080ff, 
+        #0000ff, #8000ff, #ff00ff, #ff0080);
+    background-size: 1800% 1800%;
+    animation: rainbow-background 12s linear infinite;
+    color: #000;
     line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Background color variations */
+body.bg-rainbow {
+    background: linear-gradient(124deg, 
+        #ff0000, #ff8000, #ffff00, #80ff00, 
+        #00ff00, #00ff80, #00ffff, #0080ff, 
+        #0000ff, #8000ff, #ff00ff, #ff0080);
+    background-size: 1800% 1800%;
+    animation: rainbow-background 12s linear infinite;
+}
+
+body.bg-blue {
+    background: linear-gradient(135deg, #1e3c72, #2a5298, #2e5ca5, #3498db, #89c4f4);
+    background-size: 400% 400%;
+    animation: rainbow-background 12s linear infinite;
+}
+
+body.bg-green {
+    background: linear-gradient(135deg, #134e5e, #1d7d74, #2ecc71, #a8e063, #71b280);
+    background-size: 400% 400%;
+    animation: rainbow-background 12s linear infinite;
+}
+
+body.bg-purple {
+    background: linear-gradient(135deg, #4b0082, #8e44ad, #9b59b6, #af7ac5, #d2b4de);
+    background-size: 400% 400%;
+    animation: rainbow-background 12s linear infinite;
+}
+
+body.bg-pink {
+    background: linear-gradient(135deg, #ff0084, #ff4081, #ff80ab, #ffa6c9, #ff69b4);
+    background-size: 400% 400%;
+    animation: rainbow-background 12s linear infinite;
+}
+
+body.bg-gray {
+    background: linear-gradient(135deg, #2c3e50, #34495e, #7f8c8d, #95a5a6, #bdc3c7);
+    background-size: 400% 400%;
+    animation: rainbow-background 12s linear infinite;
+}
+
+body.bg-black {
+    background: linear-gradient(135deg, #000000, #222222, #333333, #444444, #555555);
+    background-size: 400% 400%;
+    animation: rainbow-background 12s linear infinite;
 }
 
 .container {
@@ -16,22 +85,28 @@ body {
     margin: 0 auto;
     padding: 20px;
     text-align: center;
+    background-color: rgba(255, 255, 255, 0.65);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
 }
 
 h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     margin-bottom: 20px;
-    color: #333;
+    color: #000;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .game-info {
     display: flex;
     justify-content: space-around;
     margin-bottom: 20px;
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.5);
     border-radius: 8px;
     padding: 15px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    backdrop-filter: blur(3px);
 }
 
 .player {
@@ -40,16 +115,6 @@ h1 {
     align-items: center;
     padding: 10px 20px;
     border-radius: 5px;
-}
-
-.player1 {
-    background-color: rgba(255, 99, 71, 0.1);
-    color: #ff6347;
-}
-
-.player2 {
-    background-color: rgba(65, 105, 225, 0.1);
-    color: #4169e1;
 }
 
 .player-label {
@@ -69,22 +134,110 @@ h1 {
 
 .game-board {
     margin: 0 auto;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.5);
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     position: relative;
     user-select: none;
+    backdrop-filter: blur(3px);
 }
 
 .dot {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    background-color: #333;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 20px; /* Taller than wide to create egg shape */
+    background: linear-gradient(135deg, 
+        #ff9eea, #ffcaf4 20%, 
+        #a5e1ff 30%, #c4eaff 40%,
+        #ffff9e 50%, #ffffcf 60%,
+        #9effb1 70%, #caffaf 80%,
+        #ffc29e 90%, #ffdec4);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Egg shape */
+    /* Ensure transformation keeps the egg centered like the original dots */
+    transform: translate(-50%, -50%) rotate(var(--rotation, 15deg));
     z-index: 3;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.6);
+    /* Add decorative pattern on eggs */
+    background-size: 200% 200%;
+    animation: egg-pattern 8s linear infinite;
+}
+
+/* Add a subtle shine animation to make eggs look polished */
+@keyframes egg-shine {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.7; }
+}
+
+/* Add decorative patterns using pseudo-elements */
+.dot::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 15%;
+    width: 70%;
+    height: 60%;
+    background: repeating-linear-gradient(45deg, 
+        transparent, transparent 2px, 
+        rgba(255,255,255,0.5) 2px, rgba(255,255,255,0.5) 4px);
+    border-radius: 50%;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.dot::after {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 30%;
+    height: 15%;
+    background: radial-gradient(ellipse, 
+        rgba(255,255,255,0.9) 10%, 
+        transparent 70%);
+    z-index: 4;
+    animation: egg-shine 3s infinite;
+    pointer-events: none;
+}
+
+/* Add variety to eggs with different rotations and patterns */
+.dot:nth-child(3n) {
+    --rotation: -10deg;
+    background: linear-gradient(135deg, 
+        #ffcf9e, #ffe8cf 25%, 
+        #cf9eff 45%, #e5cfff 60%,
+        #9ecfff 75%, #cfe8ff 90%);
+}
+
+.dot:nth-child(3n)::before {
+    background: repeating-linear-gradient(-45deg, 
+        transparent, transparent 2px, 
+        rgba(255,255,255,0.5) 2px, rgba(255,255,255,0.5) 4px);
+}
+
+.dot:nth-child(3n+1) {
+    --rotation: 25deg;
+    background: linear-gradient(135deg, 
+        #9effb1, #d4ffdf 30%, 
+        #ff9eea 50%, #ffcaf4 70%,
+        #ffff9e 90%);
+}
+
+.dot:nth-child(3n+1)::before {
+    background: radial-gradient(circle at 30% 40%, 
+        rgba(255,255,255,0.8) 2px, 
+        transparent 4px,
+        transparent 6px,
+        rgba(255,255,255,0.6) 8px,
+        transparent 10px);
+    background-size: 12px 12px;
+}
+
+@keyframes egg-pattern {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
 }
 
 .line {
@@ -111,14 +264,6 @@ h1 {
 
 .line.active {
     opacity: 1;
-}
-
-.line.active.player1 {
-    background-color: #ff6347;
-}
-
-.line.active.player2 {
-    background-color: #4169e1;
 }
 
 .line:hover:not(.active) {
@@ -177,48 +322,176 @@ h1 {
 
 button {
     padding: 10px 15px;
-    background-color: #4CAF50;
+    background: linear-gradient(45deg, #ff2400, #e81d1d, #e8b71d);
+    background-size: 200% 200%;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+button:hover {
+    background: linear-gradient(45deg, #1de840, #1ddde8, #2b1de8);
+    background-size: 200% 200%;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 button#new-game-btn:hover {
-    background-color: #45a049;
+    background: linear-gradient(45deg, #1de840, #1ddde8, #2b1de8);
+    background-size: 200% 200%;
 }
 
-.grid-size, .fill-grid, .auto-fill {
+.grid-size, .fill-grid, .auto-fill, .game-mode, .difficulty-level, .player-color-select {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.auto-fill input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
+.player-colors {
+    display: flex;
+    gap: 16px;
 }
 
-.auto-fill label {
-    cursor: pointer;
+/* Player color styles */
+/* Default colors */
+.player1 {
+    background-color: rgba(255, 99, 71, 0.4);
+    color: #000;
+    font-weight: bold;
 }
 
-select {
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    background-color: white;
+.player2 {
+    background-color: rgba(65, 105, 225, 0.4);
+    color: #000;
+    font-weight: bold;
 }
 
-select:hover {
-    border-color: #aaa;
+.line.active.player1 {
+    background-color: #ff6347;
 }
 
-/* Fireworks Animation */
+.line.active.player2 {
+    background-color: #4169e1;
+}
+
+/* Color variations */
+/* Red */
+body.player1-red .player1, 
+body.player2-red .player2 {
+    background-color: rgba(255, 99, 71, 0.4);
+}
+
+body.player1-red .line.active.player1,
+body.player2-red .line.active.player2 {
+    background-color: #ff6347;
+}
+
+/* Blue */
+body.player1-blue .player1, 
+body.player2-blue .player2 {
+    background-color: rgba(65, 105, 225, 0.4);
+}
+
+body.player1-blue .line.active.player1,
+body.player2-blue .line.active.player2 {
+    background-color: #4169e1;
+}
+
+/* Green */
+body.player1-green .player1, 
+body.player2-green .player2 {
+    background-color: rgba(46, 204, 113, 0.4);
+}
+
+body.player1-green .line.active.player1,
+body.player2-green .line.active.player2 {
+    background-color: #2ecc71;
+}
+
+/* Yellow */
+body.player1-yellow .player1, 
+body.player2-yellow .player2 {
+    background-color: rgba(241, 196, 15, 0.4);
+}
+
+body.player1-yellow .line.active.player1,
+body.player2-yellow .line.active.player2 {
+    background-color: #f1c40f;
+}
+
+/* Purple */
+body.player1-purple .player1, 
+body.player2-purple .player2 {
+    background-color: rgba(142, 68, 173, 0.4);
+}
+
+body.player1-purple .line.active.player1,
+body.player2-purple .line.active.player2 {
+    background-color: #8e44ad;
+}
+
+/* Pink */
+body.player1-pink .player1, 
+body.player2-pink .player2 {
+    background-color: rgba(255, 105, 180, 0.4);
+}
+
+body.player1-pink .line.active.player1,
+body.player2-pink .line.active.player2 {
+    background-color: #ff69b4;
+}
+
+/* Black */
+body.player1-black .player1, 
+body.player2-black .player2 {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+body.player1-black .line.active.player1,
+body.player2-black .line.active.player2 {
+    background-color: #000000;
+}
+
+/* Rainbow */
+@keyframes rainbow-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+body.player1-rainbow .player1, 
+body.player2-rainbow .player2 {
+    background: linear-gradient(45deg, 
+        rgba(255, 0, 0, 0.3), 
+        rgba(255, 154, 0, 0.3), 
+        rgba(208, 222, 33, 0.3), 
+        rgba(79, 220, 74, 0.3), 
+        rgba(63, 218, 216, 0.3), 
+        rgba(47, 201, 226, 0.3), 
+        rgba(28, 127, 238, 0.3), 
+        rgba(95, 21, 242, 0.3), 
+        rgba(186, 12, 248, 0.3), 
+        rgba(251, 7, 217, 0.3));
+    background-size: 500% 500%;
+    animation: rainbow-gradient 8s linear infinite;
+}
+
+body.player1-rainbow .line.active.player1,
+body.player2-rainbow .line.active.player2 {
+    background: linear-gradient(45deg, 
+        #ff0000, #ff9a00, #d0de21, 
+        #4fdc4a, #3fdad8, #2fc9e2, 
+        #1c7fee, #5f15f2, #ba0cf8, #fb07d9);
+    background-size: 500% 500%;
+    animation: rainbow-gradient 8s linear infinite;
+}
+
+/* Confetti Animation */
 .fireworks-container {
     position: fixed;
     top: 0;
@@ -228,81 +501,59 @@ select:hover {
     pointer-events: none;
     z-index: 999;
     display: none;
-    background-color: rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 .fireworks-container.active {
     display: block;
 }
 
-.firework {
+.confetti {
     position: absolute;
-    width: 15px;
-    height: 15px;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    animation: confetti-fall 5s ease-in-out forwards;
+}
+
+.confetti.square {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+.confetti.triangle {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.confetti.circle {
     border-radius: 50%;
-    animation: explode 1.5s forwards;
-    filter: blur(1px);
 }
 
-.firework::before, .firework::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    animation: particle 1.2s forwards;
+.player1-win .confetti {
+    background-color: var(--color, #ff6347);
 }
 
-.player1-win .firework {
-    background-color: #ff6347;
-    box-shadow: 0 0 30px 8px #ff6347;
+.player2-win .confetti {
+    background-color: var(--color, #4169e1);
 }
 
-.player1-win .firework::before, .player1-win .firework::after {
-    background-color: #ff6347;
-    box-shadow: 0 0 20px 5px #ff6347;
-}
-
-.player2-win .firework {
-    background-color: #4169e1;
-    box-shadow: 0 0 30px 8px #4169e1;
-}
-
-.player2-win .firework::before, .player2-win .firework::after {
-    background-color: #4169e1;
-    box-shadow: 0 0 20px 5px #4169e1;
-}
-
-@keyframes explode {
+@keyframes confetti-fall {
     0% {
-        transform: scale(0);
-        opacity: 0;
+        transform: translateY(0) rotate(0deg) scale(1);
     }
-    30% {
-        transform: scale(2.5);
-        opacity: 1;
+    10% {
+        transform: translateY(10vh) rotate(calc(var(--rotation) * 36deg)) scale(1.1) translateX(calc(var(--drift) * 2vw));
     }
-    80% {
-        transform: scale(1.5);
-        opacity: 0.8;
-    }
-    100% {
-        transform: scale(0);
-        opacity: 0;
-    }
-}
-
-@keyframes particle {
-    0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
+    25% {
+        transform: translateY(25vh) rotate(calc(var(--rotation) * 90deg)) scale(1) translateX(calc(var(--drift) * 5vw));
     }
     50% {
-        opacity: 0.8;
+        transform: translateY(50vh) rotate(calc(var(--rotation) * 180deg)) scale(1.1) translateX(calc(var(--drift) * 10vw));
+    }
+    75% {
+        transform: translateY(75vh) rotate(calc(var(--rotation) * 270deg)) scale(1) translateX(calc(var(--drift) * 15vw));
     }
     100% {
-        transform: translate(var(--x), var(--y)) scale(0);
-        opacity: 0;
+        transform: translateY(100vh) rotate(calc(var(--rotation) * 360deg)) scale(1.1) translateX(calc(var(--drift) * 20vw));
     }
 }
 
@@ -348,4 +599,29 @@ select:hover {
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
     }
-} 
+}
+
+.auto-fill input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.auto-fill label {
+    cursor: pointer;
+}
+
+select {
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+}
+
+select:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+/* Remove the galaxy styling for boxes */ 

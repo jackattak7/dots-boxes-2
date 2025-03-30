@@ -42,6 +42,50 @@
                 <label for="auto-fill-toggle" title="Automatically completes boxes that only need one more line">Auto-fill:</label>
                 <input type="checkbox" id="auto-fill-toggle" title="Automatically completes boxes that only need one more line">
             </div>
+            <div class="game-mode">
+                <label for="game-mode-select">Game Mode:</label>
+                <select id="game-mode-select">
+                    <option value="human">Multiplayer</option>
+                    <option value="computer">Vs AI</option>
+                </select>
+            </div>
+            <div class="difficulty-level" id="difficulty-container" style="display: none;">
+                <label for="difficulty-select">Difficulty:</label>
+                <select id="difficulty-select">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                    <option value="impossible">Impossible</option>
+                </select>
+            </div>
+            <div class="player-colors">
+                <div class="player-color-select">
+                    <label for="player1-color">P1 Color:</label>
+                    <select id="player1-color">
+                        <option value="red" selected>Red</option>
+                        <option value="blue">Blue</option>
+                        <option value="green">Green</option>
+                        <option value="rainbow">Rainbow</option>
+                        <option value="black">Black</option>
+                        <option value="yellow">Yellow</option>
+                        <option value="purple">Purple</option>
+                        <option value="pink">Pink</option>
+                    </select>
+                </div>
+                <div class="player-color-select">
+                    <label for="player2-color">P2 Color:</label>
+                    <select id="player2-color">
+                        <option value="red">Red</option>
+                        <option value="blue" selected>Blue</option>
+                        <option value="green">Green</option>
+                        <option value="rainbow">Rainbow</option>
+                        <option value="black">Black</option>
+                        <option value="yellow">Yellow</option>
+                        <option value="purple">Purple</option>
+                        <option value="pink">Pink</option>
+                    </select>
+                </div>
+            </div>
             <div class="fill-grid">
                 <label for="fill-grid-select">Fill Grid:</label>
                 <select id="fill-grid-select">
@@ -64,10 +108,22 @@
                     <option value="12">12×12</option>
                 </select>
             </div>
+            <div class="background-color">
+                <label for="background-color-select">Background:</label>
+                <select id="background-color-select">
+                    <option value="rainbow" selected>Rainbow</option>
+                    <option value="blue">Blue</option>
+                    <option value="green">Green</option>
+                    <option value="purple">Purple</option>
+                    <option value="pink">Pink</option>
+                    <option value="gray">Gray</option>
+                    <option value="black">Black</option>
+                </select>
+            </div>
         </div>
     </div>
     
-    <!-- Fireworks animation container -->
+    <!-- Confetti animation container -->
     <div class="fireworks-container" id="fireworks-container"></div>
     
     <!-- Win message -->
