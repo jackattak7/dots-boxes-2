@@ -1,3 +1,166 @@
+// Import multiplayer functionality
+import lobbyUI from './lobby.js';
+import multiplayer from './multiplayer.js';
+import './lobby.css';
+
+// Multiplayer game state
+window.isMultiplayerGame = false;
+window.multiplayerRole = null; // 1 for Player 1, 2 for Player 2
+
+// Multiplayer game functions
+window.setupMultiplayerGame = function(gameState, playerRole) {
+    // Reset game board
+    stopConfetti();
+    initGame(false); // Initialize without auto-starting
+
+    // Set grid size from game state
+    gridSize = gameState.gridSize;
+    createBoard();
+
+    // Update player labels
+    const player1Label = document.querySelector('.player1 .player-label');
+    const player2Label = document.querySelector('.player2 .player-label');
+    
+    if (player1Label) {
+        player1Label.textContent = playerRole === 1 ? "You (P1)" : "Opponent (P1)";
+    }
+    
+    if (player2Label) {
+        player2Label.textContent = playerRole === 2 ? "You (P2)" : "Opponent (P2)";
+    }
+
+    // Set player colors based on role for visual clarity
+    updatePlayerColor(1, "red");
+    updatePlayerColor(2, "blue");
+
+    // Apply the game state (lines, boxes, scores)
+    lines = { ...gameState.lines };
+    boxes = { ...gameState.boxes };
+    scores = { ...gameState.scores };
+    currentPlayer = gameState.currentPlayer;
+
+    // Draw existing lines and boxes
+    updateBoardFromState();
+
+    // Update scores and turn indicator
+    updateScores();
+    updateMultiplayerTurnIndicator();
+};
+
+window.updateMultiplayerGameState = function(gameState, lastMove) {
+    // Update game state variables
+    lines = { ...gameState.lines };
+    boxes = { ...gameState.boxes };
+    scores = { ...gameState.scores };
+    currentPlayer = gameState.currentPlayer;
+
+    // If there was a move, animate it
+    if (lastMove) {
+        const { lineKey, player } = lastMove;
+        const [startCoord, endCoord] = lineKey.split('-');
+        const [x1, y1] = startCoord.split(',').map(Number);
+        const [x2, y2] = endCoord.split(',').map(Number);
+
+        // Find the line element
+        const lineElements = document.querySelectorAll('.line');
+        for (const element of lineElements) {
+            if (element.dataset.x1 == x1 && 
+                element.dataset.y1 == y1 && 
+                element.dataset.x2 == x2 && 
+                element.dataset.y2 == y2) {
+                
+                // Add active class and player class
+                element.classList.add('active', `player${player}`);
+                break;
+            }
+        }
+    } else {
+        // If no specific move provided, update entire board
+        updateBoardFromState();
+    }
+
+    // Update scores and turn indicator
+    updateScores();
+    updateMultiplayerTurnIndicator();
+};
+
+window.handleMultiplayerGameOver = function(winner, finalScores) {
+    isGameFinished = true;
+    scores = finalScores;
+    updateScores();
+    
+    let winnerText;
+    if (winner === 0) {
+        winnerText = "It's a Tie!";
+    } else if (winner === window.multiplayerRole) {
+        winnerText = "You Win!";
+        startConfetti(winner);
+    } else {
+        winnerText = "Opponent Wins!";
+        startConfetti(winner);
+    }
+    
+    turnTextElement.textContent = `Game Over - ${winnerText}`;
+    showWinMessage(winnerText, winner);
+};
+
+window.resetMultiplayerGame = function() {
+    // Reset game for returning to lobby
+    initGame();
+};
+
+function updateMultiplayerTurnIndicator() {
+    if (!isGameFinished) {
+        const isYourTurn = currentPlayer === window.multiplayerRole;
+        turnTextElement.textContent = isYourTurn ? "Your turn" : "Opponent's turn";
+    }
+}
+
+function updateBoardFromState() {
+    // Clear all visual line indicators
+    const lineElements = document.querySelectorAll('.line');
+    lineElements.forEach(element => {
+        element.classList.remove('active', 'player1', 'player2');
+    });
+
+    // Redraw all lines
+    for (const [lineKey, player] of Object.entries(lines)) {
+        const [startCoord, endCoord] = lineKey.split('-');
+        const [x1, y1] = startCoord.split(',').map(Number);
+        const [x2, y2] = endCoord.split(',').map(Number);
+
+        // Find the line element
+        for (const element of lineElements) {
+            if (element.dataset.x1 == x1 && 
+                element.dataset.y1 == y1 && 
+                element.dataset.x2 == x2 && 
+                element.dataset.y2 == y2) {
+                
+                // Add active class and player class
+                element.classList.add('active', `player${player}`);
+                break;
+            }
+        }
+    }
+
+    // Redraw all boxes
+    for (const [boxKey, player] of Object.entries(boxes)) {
+        const [x, y] = boxKey.split(',').map(Number);
+        const boxElement = document.getElementById(`box-${x}-${y}`);
+        
+        if (boxElement) {
+            boxElement.classList.add(`player${player}`);
+            
+            // Set box text content based on player
+            if (player === 1) {
+                boxElement.textContent = 'P1';
+            } else {
+                boxElement.textContent = 'P2';
+            }
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Game configuration
     const defaultGridSize = 8;
@@ -18,6 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let player1Color = 'red'; // Default color for player 1
     let player2Color = 'blue'; // Default color for player 2
     let backgroundColor = 'rainbow'; // Default background color
+    let soundEnabled = true; // Default sound setting
+    let animationsEnabled = true; // Default animations setting
+    let darkModeEnabled = false; // Default dark mode setting
     
     // DOM elements
     const boardElement = document.getElementById('game-board');
@@ -36,6 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const player1ColorSelect = document.getElementById('player1-color');
     const player2ColorSelect = document.getElementById('player2-color');
     const backgroundColorSelect = document.getElementById('background-color-select');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsMenu = document.getElementById('settings-menu');
+    const themeToggle = document.getElementById('theme-toggle');
+    const soundToggle = document.getElementById('sound-toggle');
+    const animationToggle = document.getElementById('animation-toggle');
     
     // Game data structures
     let lines = {}; // Format: "x1,y1-x2,y2": playerId
@@ -162,7 +333,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    function initGame() {
+    // Settings menu toggle
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            settingsMenu.classList.toggle('show');
+        });
+        
+        // Close the menu when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!settingsBtn.contains(event.target) && !settingsMenu.contains(event.target)) {
+                settingsMenu.classList.remove('show');
+            }
+        });
+    }
+    
+    // Dark mode toggle
+    if (themeToggle) {
+        // Check if dark mode was previously enabled
+        if (localStorage.getItem('darkMode') === 'true') {
+            darkModeEnabled = true;
+            themeToggle.checked = true;
+            document.body.classList.add('dark-mode');
+        }
+        
+        themeToggle.addEventListener('change', () => {
+            darkModeEnabled = themeToggle.checked;
+            document.body.classList.toggle('dark-mode', darkModeEnabled);
+            localStorage.setItem('darkMode', darkModeEnabled.toString());
+        });
+    }
+    
+    // Sound toggle
+    if (soundToggle) {
+        // Check if sound was previously disabled
+        if (localStorage.getItem('soundEnabled') === 'false') {
+            soundEnabled = false;
+            soundToggle.checked = false;
+        }
+        
+        soundToggle.addEventListener('change', () => {
+            soundEnabled = soundToggle.checked;
+            localStorage.setItem('soundEnabled', soundEnabled.toString());
+        });
+    }
+    
+    // Animations toggle
+    if (animationToggle) {
+        // Check if animations were previously disabled
+        if (localStorage.getItem('animationsEnabled') === 'false') {
+            animationsEnabled = false;
+            animationToggle.checked = false;
+            document.body.classList.add('no-animations');
+        }
+        
+        animationToggle.addEventListener('change', () => {
+            animationsEnabled = animationToggle.checked;
+            document.body.classList.toggle('no-animations', !animationsEnabled);
+            localStorage.setItem('animationsEnabled', animationsEnabled.toString());
+        });
+    }
+    
+    function initGame(resetAllSettings = true) {
+        // Initialize multiplayer lobby UI if not already initialized
+        if (!lobbyUI.isInitialized) {
+            lobbyUI.initialize();
+        }
+        
         // Reset game state
         currentPlayer = 1;
         scores = { 1: 0, 2: 0 };
@@ -175,72 +411,96 @@ document.addEventListener('DOMContentLoaded', () => {
         isComputerTurn = false;
         
         // Set initial player colors
-        updatePlayerColor(1, player1ColorSelect.value);
-        updatePlayerColor(2, player2ColorSelect.value);
-        
-        // Set initial background color
-        updateBackgroundColor(backgroundColorSelect.value);
-        
-        // Check if computer mode is selected
-        if (gameModeSelect) {
-            vsComputerMode = gameModeSelect.value === 'computer';
+        if (resetAllSettings) {
+            updatePlayerColor(1, player1ColorSelect.value);
+            updatePlayerColor(2, player2ColorSelect.value);
             
-            // Toggle difficulty dropdown visibility
-            if (difficultyContainer) {
-                difficultyContainer.style.display = vsComputerMode ? 'flex' : 'none';
+            // Set initial background color
+            updateBackgroundColor(backgroundColorSelect.value);
+            
+            // Apply saved settings
+            if (darkModeEnabled) {
+                document.body.classList.add('dark-mode');
             }
             
-            // Update body class for CSS styling
-            if (vsComputerMode) {
-                document.body.classList.add('vs-computer-mode');
-                // Update player 2 label to "Computer"
-                const player2Label = document.querySelector('.player2 .player-label');
-                if (player2Label) {
-                    player2Label.textContent = "Computer";
+            if (!animationsEnabled) {
+                document.body.classList.add('no-animations');
+            }
+            
+            // Check if computer mode is selected
+            if (gameModeSelect) {
+                vsComputerMode = gameModeSelect.value === 'computer';
+                
+                // Toggle difficulty dropdown visibility
+                if (difficultyContainer) {
+                    difficultyContainer.style.display = vsComputerMode ? 'flex' : 'none';
                 }
-            } else {
-                document.body.classList.remove('vs-computer-mode');
-                // Reset player 2 label
-                const player2Label = document.querySelector('.player2 .player-label');
-                if (player2Label) {
-                    player2Label.textContent = "Player 2";
+                
+                // Update body class for CSS styling
+                if (vsComputerMode) {
+                    document.body.classList.add('vs-computer-mode');
+                    // Update player 2 label to "Computer"
+                    const player2Label = document.querySelector('.player2 .player-label');
+                    if (player2Label) {
+                        player2Label.textContent = "Computer";
+                    }
+                } else {
+                    document.body.classList.remove('vs-computer-mode');
+                    // Reset player 2 label
+                    const player2Label = document.querySelector('.player2 .player-label');
+                    if (player2Label) {
+                        player2Label.textContent = "Player 2";
+                    }
                 }
             }
+            
+            // Get current difficulty level
+            if (difficultySelect) {
+                computerDifficulty = difficultySelect.value;
+            }
+            
+            // Clear any pending computer move
+            if (computerThinkingTimeout) {
+                clearTimeout(computerThinkingTimeout);
+                computerThinkingTimeout = null;
+            }
+            
+            // Set auto-fill toggle to checked by default
+            if (autoFillToggle) {
+                autoFillToggle.checked = true;
+            }
+            
+            // Set fill-grid select to 50% by default
+            if (fillGridSelect) {
+                fillGridSelect.value = "50";
+            }
         }
-        
-        // Get current difficulty level
-        if (difficultySelect) {
-            computerDifficulty = difficultySelect.value;
-        }
-        
-        // Clear any pending computer move
-        if (computerThinkingTimeout) {
-            clearTimeout(computerThinkingTimeout);
-            computerThinkingTimeout = null;
-        }
-        
-        // Set auto-fill toggle to checked by default
-        if (autoFillToggle) {
-            autoFillToggle.checked = true;
-        }
-        
-        // Set fill-grid select to 50% by default
-        if (fillGridSelect) {
-            fillGridSelect.value = "50";
-        }
-        
-        // No longer reset grid size to 8x8 by default
-        // Keep the user's selected value from the dropdown
 
         // Update scores display
         updateScores();
         
         // Update turn indicator
-        updateTurnIndicator();
+        if (window.isMultiplayerGame) {
+            updateMultiplayerTurnIndicator();
+        } else {
+            updateTurnIndicator();
+        }
 
         // Hide win message
         winMessageElement.classList.remove('active');
         
+        // Only recreate the board if resetAllSettings is true or if we're in a multiplayer game
+        if (resetAllSettings) {
+            createBoard();
+        }
+        
+        // Start computer's turn if applicable
+        if (vsComputerMode && !window.isMultiplayerGame) {
+            checkComputerTurn();
+        }
+    }
+    
+    function createBoard() {
         // Adjust cell size based on grid size
         if (gridSize <= 8) {
             cellSize = 60; // Normal size for smaller grids
@@ -326,16 +586,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Fill grid with random lines
-        randomlyFillGrid(currentFillPercentage);
-        
-        // Start computer's turn if applicable
-        checkComputerTurn();
+        // Fill grid with random lines (only for local gameplay)
+        if (!window.isMultiplayerGame) {
+            randomlyFillGrid(currentFillPercentage);
+        }
     }
     
     function handleLineClick(event) {
         // If game is already finished or it's computer's turn, ignore clicks
         if (isGameFinished || isComputerTurn) {
+            return;
+        }
+        
+        // If it's a multiplayer game and not your turn, ignore clicks
+        if (window.isMultiplayerGame && currentPlayer !== window.multiplayerRole) {
+            console.log('Not your turn in multiplayer game');
             return;
         }
         
@@ -347,7 +612,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Mark the line as active
+        // If multiplayer game, send move to server instead of updating locally
+        if (window.isMultiplayerGame) {
+            console.log('Sending multiplayer move:', { x1, y1, x2, y2 });
+            multiplayer.makeMove(
+                parseInt(x1), 
+                parseInt(y1), 
+                parseInt(x2), 
+                parseInt(y2)
+            );
+            // Don't update client-side - wait for server update
+            return;
+        }
+        
+        // Regular game logic for local play continues below
+        // Mark the line as active (local gameplay)
         lines[lineKey] = currentPlayer;
         event.target.classList.add('active', `player${currentPlayer}`);
         
@@ -592,7 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return safeMoves[Math.floor(Math.random() * topCount)];
     }
     
-    // Find the move that gives away the fewest boxes
+    // Function to find the least damaging move
     function findLeastDamagingMove() {
         let bestMove = null;
         let fewestBoxesGiven = Infinity;
@@ -625,46 +904,92 @@ document.addEventListener('DOMContentLoaded', () => {
         return bestMove;
     }
     
+    // Helper function for the AI to select a line programmatically
+    function selectLine(lineId) {
+        const lineElements = document.querySelectorAll('.line');
+        
+        // Find the line element by data attributes
+        for (const element of lineElements) {
+            const x1 = parseInt(element.dataset.x1);
+            const y1 = parseInt(element.dataset.y1);
+            const x2 = parseInt(element.dataset.x2);
+            const y2 = parseInt(element.dataset.y2);
+            const elementId = `${x1},${y1}-${x2},${y2}`;
+            
+            if (elementId === lineId) {
+                // Simulate a click on the line
+                element.click();
+                return;
+            }
+        }
+    }
+    
     // Count how many boxes would be given away by a move
     function countBoxesGivenAway(x1, y1, x2, y2) {
         let count = 0;
         
-        // Determine which boxes to check based on the line position
-        const boxesToCheck = [];
-        
-        if (x1 === x2) {
-            // Vertical line
-            if (x1 > 0) boxesToCheck.push({ x: x1 - 1, y: Math.min(y1, y2) });
-            if (x1 < gridSize - 1) boxesToCheck.push({ x: x1, y: Math.min(y1, y2) });
-        } else {
-            // Horizontal line
-            if (y1 > 0) boxesToCheck.push({ x: Math.min(x1, x2), y: y1 - 1 });
-            if (y1 < gridSize - 1) boxesToCheck.push({ x: Math.min(x1, x2), y: y1 });
+        // Check if this is a horizontal line
+        if (y1 === y2) {
+            // Check the box above this line (if it exists)
+            if (y1 > 0) {
+                const boxAbove = {
+                    top: `${x1},${y1-1}-${x2},${y1-1}`,
+                    bottom: `${x1},${y1}-${x2},${y2}`,  // This is the current line
+                    left: `${x1},${y1-1}-${x1},${y1}`,
+                    right: `${x2},${y1-1}-${x2},${y1}`
+                };
+                
+                // If the other three sides are drawn, this move would give away a box
+                if (lines[boxAbove.top] && lines[boxAbove.left] && lines[boxAbove.right]) {
+                    count++;
+                }
+            }
+            
+            // Check the box below this line (if it exists)
+            if (y1 < gridSize - 1) {
+                const boxBelow = {
+                    top: `${x1},${y1}-${x2},${y2}`,  // This is the current line
+                    bottom: `${x1},${y1+1}-${x2},${y1+1}`,
+                    left: `${x1},${y1}-${x1},${y1+1}`,
+                    right: `${x2},${y1}-${x2},${y1+1}`
+                };
+                
+                // If the other three sides are drawn, this move would give away a box
+                if (lines[boxBelow.bottom] && lines[boxBelow.left] && lines[boxBelow.right]) {
+                    count++;
+                }
+            }
         }
-        
-        // Check if any of these boxes would have 3 sides after this move
-        for (const box of boxesToCheck) {
-            // Skip completed boxes
-            if (boxes[`${box.x},${box.y}`]) continue;
+        // Check if this is a vertical line
+        else if (x1 === x2) {
+            // Check the box to the left of this line (if it exists)
+            if (x1 > 0) {
+                const boxLeft = {
+                    top: `${x1-1},${y1}-${x1},${y1}`,
+                    bottom: `${x1-1},${y2}-${x1},${y2}`,
+                    left: `${x1-1},${y1}-${x1-1},${y2}`,
+                    right: `${x1},${y1}-${x1},${y2}`  // This is the current line
+                };
+                
+                // If the other three sides are drawn, this move would give away a box
+                if (lines[boxLeft.top] && lines[boxLeft.bottom] && lines[boxLeft.left]) {
+                    count++;
+                }
+            }
             
-            const top = `${box.x},${box.y}-${box.x+1},${box.y}`;
-            const right = `${box.x+1},${box.y}-${box.x+1},${box.y+1}`;
-            const bottom = `${box.x},${box.y+1}-${box.x+1},${box.y+1}`;
-            const left = `${box.x},${box.y}-${box.x},${box.y+1}`;
-            
-            // Count existing sides
-            let sidesFilled = 0;
-            if (lines[top]) sidesFilled++;
-            if (lines[right]) sidesFilled++;
-            if (lines[bottom]) sidesFilled++;
-            if (lines[left]) sidesFilled++;
-            
-            // Check if the current move would add a third side
-            const currentMove = `${x1},${y1}-${x2},${y2}`;
-            if ((currentMove === top || currentMove === right || 
-                currentMove === bottom || currentMove === left) && 
-                sidesFilled === 2) {
-                count++;
+            // Check the box to the right of this line (if it exists)
+            if (x1 < gridSize - 1) {
+                const boxRight = {
+                    top: `${x1},${y1}-${x1+1},${y1}`,
+                    bottom: `${x1},${y2}-${x1+1},${y2}`,
+                    left: `${x1},${y1}-${x1},${y2}`,  // This is the current line
+                    right: `${x1+1},${y1}-${x1+1},${y2}`
+                };
+                
+                // If the other three sides are drawn, this move would give away a box
+                if (lines[boxRight.top] && lines[boxRight.bottom] && lines[boxRight.right]) {
+                    count++;
+                }
             }
         }
         
@@ -695,7 +1020,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateTurnIndicator() {
         if (!isGameFinished) {
-            if (vsComputerMode && currentPlayer === 2) {
+            if (window.isMultiplayerGame) {
+                updateMultiplayerTurnIndicator();
+            } else if (vsComputerMode && currentPlayer === 2) {
                 turnTextElement.textContent = isComputerTurn ? "Computer is thinking..." : "Computer's turn";
             } else {
                 turnTextElement.textContent = `Player ${currentPlayer}'s turn`;
@@ -713,97 +1040,74 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Confetti functions
     function startConfetti(winner) {
-        // Clear any existing confetti
+        // Clear existing confetti
         fireworksContainer.innerHTML = '';
-        fireworksContainer.className = 'fireworks-container active';
         
-        // Add winner class to container
+        // Add active class and winner class to container
+        fireworksContainer.className = 'fireworks-container active';
         fireworksContainer.classList.add(`player${winner}-win`);
         
-        // Generate different colors for confetti based on winner's color
-        let colors;
+        // Get the player's color
+        const playerColor = winner === 1 ? player1Color : player2Color;
         
-        if (winner === 1) {
-            switch (player1Color) {
-                case 'red':
-                    colors = ['#ff6347', '#ff8c7a', '#ffb4a8', '#ffd1ca', '#ffa69e'];
-                    break;
-                case 'blue':
-                    colors = ['#4169e1', '#6a88e5', '#93a7ea', '#bcc6f0', '#7f9de8'];
-                    break;
-                case 'green':
-                    colors = ['#2ecc71', '#58d68d', '#82e0aa', '#abebc6', '#7dcea0'];
-                    break;
-                case 'yellow':
-                    colors = ['#f1c40f', '#f4d03f', '#f7dc6f', '#f9e79f', '#f8c471'];
-                    break;
-                case 'purple':
-                    colors = ['#8e44ad', '#a569bd', '#bb8fce', '#d2b4de', '#af7ac5'];
-                    break;
-                case 'pink':
-                    colors = ['#ff69b4', '#ff8cc6', '#ffaed8', '#ffcfe9', '#ff9cc0'];
-                    break;
-                case 'black':
-                    colors = ['#333333', '#555555', '#777777', '#999999', '#444444'];
-                    break;
-                case 'rainbow':
-                    colors = ['#ff0000', '#ff9a00', '#d0de21', '#4fdc4a', '#3fdad8', '#2fc9e2', '#1c7fee', '#5f15f2', '#ba0cf8', '#fb07d9'];
-                    break;
-                default:
-                    colors = ['#ff6347', '#ff8c7a', '#ffb4a8', '#ffd1ca', '#ffa69e'];
-            }
-        } else {
-            switch (player2Color) {
-                case 'red':
-                    colors = ['#ff6347', '#ff8c7a', '#ffb4a8', '#ffd1ca', '#ffa69e'];
-                    break;
-                case 'blue':
-                    colors = ['#4169e1', '#6a88e5', '#93a7ea', '#bcc6f0', '#7f9de8'];
-                    break;
-                case 'green':
-                    colors = ['#2ecc71', '#58d68d', '#82e0aa', '#abebc6', '#7dcea0'];
-                    break;
-                case 'yellow':
-                    colors = ['#f1c40f', '#f4d03f', '#f7dc6f', '#f9e79f', '#f8c471'];
-                    break;
-                case 'purple':
-                    colors = ['#8e44ad', '#a569bd', '#bb8fce', '#d2b4de', '#af7ac5'];
-                    break;
-                case 'pink':
-                    colors = ['#ff69b4', '#ff8cc6', '#ffaed8', '#ffcfe9', '#ff9cc0'];
-                    break;
-                case 'black':
-                    colors = ['#333333', '#555555', '#777777', '#999999', '#444444'];
-                    break;
-                case 'rainbow':
-                    colors = ['#ff0000', '#ff9a00', '#d0de21', '#4fdc4a', '#3fdad8', '#2fc9e2', '#1c7fee', '#5f15f2', '#ba0cf8', '#fb07d9'];
-                    break;
-                default:
-                    colors = ['#4169e1', '#6a88e5', '#93a7ea', '#bcc6f0', '#7f9de8'];
-            }
+        let colors = [];
+        
+        // Set colors based on player's color
+        switch(playerColor) {
+            case 'red':
+                colors = ['#ff6347', '#ff4500', '#ff0000', '#cd5c5c', '#b22222'];
+                break;
+            case 'blue':
+                colors = ['#4169e1', '#0000ff', '#0000cd', '#00008b', '#000080'];
+                break;
+            case 'green':
+                colors = ['#2ecc71', '#00ff00', '#008000', '#006400', '#00ff7f'];
+                break;
+            case 'yellow':
+                colors = ['#f1c40f', '#ffff00', '#ffd700', '#ffa500', '#ff8c00'];
+                break;
+            case 'purple':
+                colors = ['#8e44ad', '#9b59b6', '#800080', '#4b0082', '#663399'];
+                break;
+            case 'pink':
+                colors = ['#ff69b4', '#ff1493', '#ffc0cb', '#db7093', '#c71585'];
+                break;
+            case 'black':
+                colors = ['#000000', '#1a1a1a', '#333333', '#4d4d4d', '#666666'];
+                break;
+            case 'rainbow':
+                colors = [
+                    '#ff0000', '#ff9a00', '#d0de21', '#4fdc4a',
+                    '#3fdad8', '#2fc9e2', '#1c7fee', '#5f15f2',
+                    '#ba0cf8', '#fb07d9'
+                ];
+                break;
+            default:
+                // Default confetti colors
+                colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
         }
         
-        // Initial burst of confetti
-        for (let i = 0; i < 100; i++) {
-            setTimeout(() => {
-                createConfetti(colors);
-            }, i * 50);
+        // Create the confetti pieces in batches with staggered timing
+        const confettiCount = 150; // Increase confetti count
+        
+        // Initially create a first batch
+        for (let i = 0; i < 50; i++) {
+            createConfetti(colors);
         }
         
-        // Continue dropping confetti
-        const confettiInterval = setInterval(() => {
-            for (let i = 0; i < 10; i++) {
-                createConfetti(colors);
-            }
-        }, 500);
-        
-        // Store interval ID on the container to clear it later
-        fireworksContainer.dataset.intervalId = confettiInterval;
-        
-        // Stop after 8 seconds
+        // Add more confetti with a slight delay
         setTimeout(() => {
-            stopConfetti();
-        }, 8000);
+            for (let i = 0; i < 50; i++) {
+                createConfetti(colors);
+            }
+        }, 300);
+        
+        // Add final batch with more delay
+        setTimeout(() => {
+            for (let i = 0; i < 50; i++) {
+                createConfetti(colors);
+            }
+        }, 600);
     }
     
     function stopConfetti() {
@@ -827,18 +1131,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const shape = shapes[Math.floor(Math.random() * shapes.length)];
         confetti.classList.add(shape);
         
-        // Random position
+        // Random position along the top of the screen
         const x = Math.random() * window.innerWidth;
         confetti.style.left = `${x}px`;
         
+        // Varied starting heights (some higher than others)
+        const startingHeight = -(Math.random() * 100 + 20); // Between -20px and -120px
+        confetti.style.top = `${startingHeight}px`;
+        
         // Random size
-        const size = Math.random() * 7 + 5; // Between 5px and 12px
+        const size = Math.random() * 10 + 5; // Between 5px and 15px for more variety
         confetti.style.width = `${size}px`;
         confetti.style.height = `${size}px`;
         
         // Random rotation and drift for animation
-        confetti.style.setProperty('--rotation', Math.random() * 10 - 5); // Rotation factor
-        confetti.style.setProperty('--drift', Math.random() * 10 - 5); // Horizontal drift
+        confetti.style.setProperty('--rotation', Math.random() * 16 - 8); // Increased rotation
+        confetti.style.setProperty('--drift', Math.random() * 20 - 10); // Increased drift
+        
+        // Random animation duration for more natural effect
+        const duration = 4 + Math.random() * 3; // Between 4-7 seconds
+        confetti.style.setProperty('--duration', `${duration}s`);
         
         // Random color from the array
         const color = colors[Math.floor(Math.random() * colors.length)];
@@ -850,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove after animation
         setTimeout(() => {
             confetti.remove();
-        }, 5000);
+        }, duration * 1000); // Match the removal time to the animation duration
     }
     
     function showWinMessage(message, winner = 0) {
@@ -1154,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const boxElement = document.getElementById(`box-${x}-${y}`);
                     boxElement.classList.add(`player${currentPlayer}`);
                     
-                    // Set box text content based on player and color
+                    // Set box text content based on player
                     if (currentPlayer === 1) {
                         boxElement.textContent = 'P1';
                     } else {
@@ -1224,194 +1536,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add(`bg-${color}`);
     }
 
-    // Computer player logic
-    function computerPlay() {
-        if (!isComputerTurn || isGameFinished) return;
-        
-        // Set thinking time based on difficulty
-        let thinkingTime = 500;
-        if (computerDifficulty === 'easy') {
-            thinkingTime = 300;
-        } else if (computerDifficulty === 'hard') {
-            thinkingTime = 700;
-        } else if (computerDifficulty === 'impossible') {
-            thinkingTime = 800;
+    // Function to play sound effects if enabled
+    function playSound(sound) {
+        if (soundEnabled) {
+            // Here you could implement actual sound effects
+            console.log(`Playing sound: ${sound}`);
+            // Example: const audio = new Audio(`sounds/${sound}.mp3`); audio.play();
         }
-        
-        // Simulate "thinking" time
-        computerThinkingTimeout = setTimeout(() => {
-            // Find the best move based on difficulty
-            let lineId;
-            
-            if (computerDifficulty === 'impossible') {
-                // Perfect AI always makes the best possible move
-                lineId = findBestMove();
-            } else if (computerDifficulty === 'hard') {
-                // Hard: 80% chance to make the best move
-                if (Math.random() < 0.8) {
-                    lineId = findBestMove();
-                } else {
-                    lineId = findRandomAvailableLine();
-                }
-            } else if (computerDifficulty === 'easy') {
-                // Easy: 30% chance to make the best move
-                if (Math.random() < 0.3) {
-                    lineId = findBestMove();
-                } else {
-                    lineId = findRandomAvailableLine();
-                }
-            } else {
-                // Medium (default): 50% chance to make the best move
-                if (Math.random() < 0.5) {
-                    lineId = findBestMove();
-                } else {
-                    lineId = findRandomAvailableLine();
-                }
-            }
-            
-            // Make the move if line ID is valid
-            if (lineId) {
-                selectLine(lineId);
-            }
-            
-            isComputerTurn = false;
-        }, thinkingTime);
-    }
-
-    // Find the best possible move for the computer player
-    function findBestMove() {
-        const availableLines = Object.keys(lines).filter(lineId => !lines[lineId].isSelected);
-        
-        // Check for boxes that can be completed
-        for (const lineId of availableLines) {
-            const lineInfo = lines[lineId];
-            
-            // Temporarily select this line
-            lineInfo.isSelected = true;
-            
-            // Check if this completes any boxes
-            const boxesCompleted = getBoxesCompletedByLine(lineId);
-            
-            // Unselect the line for simulation
-            lineInfo.isSelected = false;
-            
-            if (boxesCompleted.length > 0) {
-                // If we can complete a box, do it
-                return lineId;
-            }
-        }
-        
-        // If no boxes can be completed, find moves that don't let the opponent complete a box
-        const safeLines = [];
-        
-        for (const lineId of availableLines) {
-            const lineInfo = lines[lineId];
-            
-            // Temporarily select this line
-            lineInfo.isSelected = true;
-            
-            let isUnsafeMove = false;
-            
-            // For each remaining unselected line, check if it would complete a box
-            for (const otherLineId of availableLines) {
-                if (otherLineId === lineId) continue;
-                
-                const otherLineInfo = lines[otherLineId];
-                
-                // Temporarily select the other line
-                otherLineInfo.isSelected = true;
-                
-                // Check if this completes any boxes
-                const boxesCompleted = getBoxesCompletedByLine(otherLineId);
-                
-                // Unselect the other line
-                otherLineInfo.isSelected = false;
-                
-                if (boxesCompleted.length > 0) {
-                    isUnsafeMove = true;
-                    break;
-                }
-            }
-            
-            // Unselect the line for simulation
-            lineInfo.isSelected = false;
-            
-            if (!isUnsafeMove) {
-                safeLines.push(lineId);
-            }
-        }
-        
-        // If there are safe moves, choose one
-        if (safeLines.length > 0) {
-            return safeLines[Math.floor(Math.random() * safeLines.length)];
-        }
-        
-        // If all moves are unsafe, choose the one that gives away the least boxes
-        let bestLine = availableLines[0];
-        let minBoxesGiven = 4; // Max possible boxes to give away
-        
-        for (const lineId of availableLines) {
-            const lineInfo = lines[lineId];
-            
-            // Simulate selecting this line
-            lineInfo.isSelected = true;
-            
-            // Count how many boxes could be completed by the opponent in their next move
-            let boxesGivenAway = 0;
-            
-            for (const otherLineId of Object.keys(lines).filter(id => !lines[id].isSelected)) {
-                const boxesCompleted = getBoxesCompletedByLine(otherLineId);
-                boxesGivenAway += boxesCompleted.length;
-            }
-            
-            // Unselect the line
-            lineInfo.isSelected = false;
-            
-            // If this move gives away fewer boxes, choose it
-            if (boxesGivenAway < minBoxesGiven) {
-                minBoxesGiven = boxesGivenAway;
-                bestLine = lineId;
-            }
-        }
-        
-        return bestLine;
-    }
-    
-    // Helper function to get boxes that would be completed by selecting a line
-    function getBoxesCompletedByLine(lineId) {
-        const boxesCompleted = [];
-        
-        // Check each box to see if the line would complete it
-        for (const boxId in boxes) {
-            if (!boxes[boxId].isCompleted) {
-                const boxLines = boxes[boxId].lines;
-                
-                if (boxLines.includes(lineId)) {
-                    // Count how many lines are already selected
-                    let selectedCount = 0;
-                    for (const boxLineId of boxLines) {
-                        if (boxLineId === lineId || lines[boxLineId].isSelected) {
-                            selectedCount++;
-                        }
-                    }
-                    
-                    // If this line would complete the box (all 4 sides), add it
-                    if (selectedCount === 4) {
-                        boxesCompleted.push(boxId);
-                    }
-                }
-            }
-        }
-        
-        return boxesCompleted;
-    }
-    
-    // Find a random available line
-    function findRandomAvailableLine() {
-        const availableLines = Object.keys(lines).filter(lineId => !lines[lineId].isSelected);
-        if (availableLines.length > 0) {
-            return availableLines[Math.floor(Math.random() * availableLines.length)];
-        }
-        return null;
     }
 }); 

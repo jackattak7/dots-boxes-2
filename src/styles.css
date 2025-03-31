@@ -145,99 +145,27 @@ h1 {
 
 .dot {
     position: absolute;
-    width: 16px;
-    height: 20px; /* Taller than wide to create egg shape */
-    background: linear-gradient(135deg, 
-        #ff9eea, #ffcaf4 20%, 
-        #a5e1ff 30%, #c4eaff 40%,
-        #ffff9e 50%, #ffffcf 60%,
-        #9effb1 70%, #caffaf 80%,
-        #ffc29e 90%, #ffdec4);
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Egg shape */
-    /* Ensure transformation keeps the egg centered like the original dots */
-    transform: translate(-50%, -50%) rotate(var(--rotation, 15deg));
-    z-index: 3;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.6);
-    /* Add decorative pattern on eggs */
-    background-size: 200% 200%;
-    animation: egg-pattern 8s linear infinite;
-}
-
-/* Add a subtle shine animation to make eggs look polished */
-@keyframes egg-shine {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 0.7; }
-}
-
-/* Add decorative patterns using pseudo-elements */
-.dot::before {
-    content: '';
-    position: absolute;
-    top: 20%;
-    left: 15%;
-    width: 70%;
-    height: 60%;
-    background: repeating-linear-gradient(45deg, 
-        transparent, transparent 2px, 
-        rgba(255,255,255,0.5) 2px, rgba(255,255,255,0.5) 4px);
+    width: 14px;
+    height: 14px;
+    background: #333;
     border-radius: 50%;
-    z-index: 4;
-    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    border: none;
 }
 
-.dot::after {
-    content: '';
-    position: absolute;
-    top: 15%;
-    left: 20%;
-    width: 30%;
-    height: 15%;
-    background: radial-gradient(ellipse, 
-        rgba(255,255,255,0.9) 10%, 
-        transparent 70%);
-    z-index: 4;
-    animation: egg-shine 3s infinite;
-    pointer-events: none;
+.dot::before, .dot::after {
+    display: none;
 }
 
-/* Add variety to eggs with different rotations and patterns */
+/* Add variety to dots with different colors */
 .dot:nth-child(3n) {
-    --rotation: -10deg;
-    background: linear-gradient(135deg, 
-        #ffcf9e, #ffe8cf 25%, 
-        #cf9eff 45%, #e5cfff 60%,
-        #9ecfff 75%, #cfe8ff 90%);
-}
-
-.dot:nth-child(3n)::before {
-    background: repeating-linear-gradient(-45deg, 
-        transparent, transparent 2px, 
-        rgba(255,255,255,0.5) 2px, rgba(255,255,255,0.5) 4px);
+    background: #444;
 }
 
 .dot:nth-child(3n+1) {
-    --rotation: 25deg;
-    background: linear-gradient(135deg, 
-        #9effb1, #d4ffdf 30%, 
-        #ff9eea 50%, #ffcaf4 70%,
-        #ffff9e 90%);
-}
-
-.dot:nth-child(3n+1)::before {
-    background: radial-gradient(circle at 30% 40%, 
-        rgba(255,255,255,0.8) 2px, 
-        transparent 4px,
-        transparent 6px,
-        rgba(255,255,255,0.6) 8px,
-        transparent 10px);
-    background-size: 12px 12px;
-}
-
-@keyframes egg-pattern {
-    0% { background-position: 0% 0%; }
-    50% { background-position: 100% 100%; }
-    100% { background-position: 0% 0%; }
+    background: #222;
 }
 
 .line {
@@ -512,8 +440,9 @@ body.player2-rainbow .line.active.player2 {
     position: absolute;
     width: 10px;
     height: 10px;
-    top: -10px;
-    animation: confetti-fall 5s ease-in-out forwards;
+    top: -50px; /* Start higher above the viewport */
+    animation: confetti-fall 5s ease-in forwards; /* Default duration */
+    animation-duration: var(--duration, 5s); /* Allow custom durations */
 }
 
 .confetti.square {
@@ -539,6 +468,10 @@ body.player2-rainbow .line.active.player2 {
 @keyframes confetti-fall {
     0% {
         transform: translateY(0) rotate(0deg) scale(1);
+        opacity: 0;
+    }
+    5% {
+        opacity: 1;
     }
     10% {
         transform: translateY(10vh) rotate(calc(var(--rotation) * 36deg)) scale(1.1) translateX(calc(var(--drift) * 2vw));
@@ -554,6 +487,7 @@ body.player2-rainbow .line.active.player2 {
     }
     100% {
         transform: translateY(100vh) rotate(calc(var(--rotation) * 360deg)) scale(1.1) translateX(calc(var(--drift) * 20vw));
+        opacity: 0.3;
     }
 }
 
@@ -624,4 +558,208 @@ select:focus {
     border-color: #4CAF50;
 }
 
-/* Remove the galaxy styling for boxes */ 
+/* Remove the galaxy styling for boxes */
+
+/* Settings Dropdown */
+.settings-dropdown {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 1000;
+}
+
+#settings-btn {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid #888;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+#settings-btn:hover {
+    background-color: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.settings-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    min-width: 200px;
+    display: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.settings-menu.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.settings-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.settings-item:last-child {
+    border-bottom: none;
+}
+
+.settings-item label {
+    font-weight: 500;
+    color: #333;
+}
+
+/* Dark mode styling */
+body.dark-mode {
+    color: #f0f0f0;
+}
+
+body.dark-mode .container {
+    background-color: rgba(30, 30, 30, 0.9);
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+}
+
+body.dark-mode #settings-btn {
+    background-color: rgba(50, 50, 50, 0.9);
+    color: white;
+    border-color: #555;
+}
+
+body.dark-mode .settings-menu {
+    background-color: #333;
+    color: white;
+}
+
+body.dark-mode .settings-item {
+    border-bottom-color: #555;
+}
+
+body.dark-mode .settings-item label {
+    color: #ddd;
+}
+
+body.dark-mode .player1, body.dark-mode .player2 {
+    background-color: rgba(40, 40, 40, 0.8);
+    border-color: #555;
+}
+
+body.dark-mode .game-controls, body.dark-mode .controls {
+    background-color: rgba(40, 40, 40, 0.8);
+    border-color: #555;
+}
+
+body.dark-mode button {
+    background-color: #444;
+    color: white;
+    border-color: #555;
+}
+
+body.dark-mode button:hover {
+    background-color: #555;
+}
+
+body.dark-mode select, body.dark-mode input[type="checkbox"] {
+    background-color: #444;
+    color: white;
+    border-color: #555;
+}
+
+/* Animation control */
+body.no-animations * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+}
+
+/* Instructions Panel */
+.instructions-panel {
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    width: 280px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    z-index: 100;
+    text-align: left;
+}
+
+.instructions-panel h2 {
+    font-size: 1.6rem;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #333;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.instructions-panel h3 {
+    font-size: 1.2rem;
+    margin: 15px 0 8px;
+    color: #444;
+}
+
+.instructions-panel p, 
+.instructions-panel li {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.instructions-panel ul, 
+.instructions-panel ol {
+    padding-left: 20px;
+    margin-bottom: 12px;
+}
+
+.instructions-content {
+    padding-right: 5px;
+}
+
+/* For smaller screens */
+@media (max-width: 1200px) {
+    .instructions-panel {
+        position: static;
+        width: 90%;
+        max-width: 600px;
+        margin: 20px auto;
+        transform: none;
+        max-height: none;
+    }
+}
+
+/* Dark mode support for instructions */
+body.dark-mode .instructions-panel {
+    background-color: rgba(40, 40, 40, 0.9);
+    color: #f0f0f0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .instructions-panel h2 {
+    color: #f0f0f0;
+    border-bottom-color: #555;
+}
+
+body.dark-mode .instructions-panel h3 {
+    color: #ddd;
+} 
